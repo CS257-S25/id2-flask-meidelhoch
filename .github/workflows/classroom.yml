@@ -1,0 +1,58 @@
+name: Autograding Tests
+'on':
+- push
+- repository_dispatch
+permissions:
+  checks: write
+  actions: read
+  contents: read
+jobs:
+  run-autograding-tests:
+    runs-on: ubuntu-latest
+    if: github.actor != 'github-classroom[bot]'
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: Run test suite
+      id: run-test-suite
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: Run test suite
+        setup-command: python -m pip install --upgrade pip; pip install flask
+        command: python3 -m unittest discover -s Tests
+        timeout: 10
+    - name: Coverage report
+      id: coverage-report
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: Coverage report
+        setup-command: python -m pip install --upgrade pip; pip install coverage;
+          pip install flask
+        command: python3 -m coverage run --source app -m unittest discover Tests;
+          python3 -m coverage report -m
+        timeout: 10
+    - name: Style check - app
+      id: style-check-app
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: Style check - app
+        setup-command: python -m pip install --upgrade pip; pip install pylint
+        command: pylint --disable=import-error app.py
+        timeout: 10
+    - name: Style check - Tests
+      id: style-check-tests
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: Style check - Tests
+        setup-command: python -m pip install --upgrade pip; pip install pylint
+        command: pylint --disable=import-error Tests
+        timeout: 10
+    - name: Autograding Reporter
+      uses: classroom-resources/autograding-grading-reporter@v1
+      env:
+        RUN-TEST-SUITE_RESULTS: "${{steps.run-test-suite.outputs.result}}"
+        COVERAGE-REPORT_RESULTS: "${{steps.coverage-report.outputs.result}}"
+        STYLE-CHECK-APP_RESULTS: "${{steps.style-check-app.outputs.result}}"
+        STYLE-CHECK-TESTS_RESULTS: "${{steps.style-check-tests.outputs.result}}"
+      with:
+        runners: run-test-suite,coverage-report,style-check-app,style-check-tests
