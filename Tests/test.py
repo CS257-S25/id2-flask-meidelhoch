@@ -5,15 +5,21 @@ Test the Flask application for getting a random recipe.
 import unittest
 import unittest.mock
 import random
-from app import *
+from app import app
 
 
 
 class TestHome(unittest.TestCase):
     '''Test the homepage route.'''
+
+    def setUp(self):
+        '''
+        Sets up the test environment by mocking the get_data function.
+        '''
+        self.app = app.test_client()
+
     def test_route(self):
         '''Test the homepage route.'''
-        self.app = app.test_client()
         response = self.app.get('/', follow_redirects=True)
         self.assertEqual(b"To use this app go to /random/&lt;int:num_recipes&gt; where "
         b"&lt;int:num_recipes&gt; is the number of random recipes you want to get. For example, "
@@ -25,6 +31,8 @@ class TestRandomRecipes(unittest.TestCase):
         '''
         Sets up the test environment by mocking the get_data function.
         '''
+
+        self.app = app.test_client()
 
         random.seed(73191)
 
@@ -54,7 +62,6 @@ class TestRandomRecipes(unittest.TestCase):
 
     def test_valid_input(self):
         '''Test the random recipes route.'''
-        self.app = app.test_client()
         response = self.app.get('/random/1', follow_redirects=True)
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"Recipe: Title7", response.data)
@@ -72,7 +79,6 @@ class TestRandomRecipes(unittest.TestCase):
 
     def test_invalid_input(self):
         '''Test the random recipes route with invalid input.'''
-        self.app = app.test_client()
         response = self.app.get('/random/abc', follow_redirects=True)
         self.assertEqual(response.status_code, 404)
         self.assertIn(b"sorry, wrong format, / or /random/<int:num_recipes> expected",
