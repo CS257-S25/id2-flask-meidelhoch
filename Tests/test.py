@@ -14,7 +14,7 @@ class TestHome(unittest.TestCase):
 
     def setUp(self):
         '''
-        Sets up the test environment by mocking the get_data function.
+        Sets up the test environment.
         '''
         self.app = app.test_client()
 
